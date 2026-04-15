@@ -1,0 +1,39 @@
+name: Build bot data
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Еж и Билл.xlsx"
+      - "scripts/convert_yozhik_bill.py"
+      - ".github/workflows/build_data.yml"
+
+jobs:
+  build-data:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install openpyxl
+
+      - name: Build JSON files
+        run: python scripts/convert_yozhik_bill.py
+
+      - name: Commit generated JSON
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add yozhik.json bill.json
+          git diff --cached --quiet || git commit -m "Обновить yozhik.json и bill.json"
+          git push
